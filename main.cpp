@@ -14,8 +14,10 @@ int main()
     sf::Font font("assets/fonts/Nunito-Regular.ttf");
     std::vector<FarmPlot> plots;
     int currentDay = 1;
-    int seeds = 5;
+    int carrotSeeds = 5;
+    int strawberrySeeds = 0;
     int coins = 100;
+    CropType selectedCrop = CropType::Carrot;
     bool shopOpen = false;
 
     sf::Text dayText(font);
@@ -38,12 +40,12 @@ int main()
     moneyText.setCharacterSize(26);
     moneyText.setFillColor(sf::Color(90, 80, 60));
     moneyText.setString("Coins: 100");
-    moneyText.setPosition({800.f, 30.f});
+    moneyText.setPosition({850.f, 30.f});
 
     sf::Text seedText(font);
     seedText.setCharacterSize(24);
     seedText.setFillColor(sf::Color(90, 110, 70));
-    seedText.setString("Seeds: 5");
+    seedText.setString("C: 5   S: 0");
     seedText.setPosition({650.f, 31.f});
 
     sf::RectangleShape shopPanel(sf::Vector2f(420.f, 300.f));
@@ -62,24 +64,43 @@ int main()
     shopInfo.setCharacterSize(22);
     shopInfo.setFillColor(sf::Color(90, 80, 60));
     shopInfo.setString(
-    "Carrot Seeds\n\n1 seed = 10 coins"
-);
-    shopInfo.setPosition({345.f, 270.f});
+    "Carrot Seeds = 10 coins\n\n"
+    "Strawberry Seeds = 15 coins\n\n"
+    );
+    shopInfo.setPosition({350.f, 270.f});
 
     sf::Text shopClose(font);shopClose.setCharacterSize(18);
     shopClose.setFillColor(sf::Color(110, 110, 100));
     shopClose.setString("Press B to close");
     shopClose.setPosition({410.f, 440.f});
 
-    sf::RectangleShape buyButton(sf::Vector2f(180.f, 55.f));
+    // Carrot buy button
+    sf::RectangleShape buyButton(sf::Vector2f(130.f, 45.f));
     buyButton.setFillColor(sf::Color(120, 165, 95));
-    buyButton.setPosition({410.f, 365.f});
+    buyButton.setPosition({560.f, 265.f});
+
+    // Strawberry buy button
+    sf::RectangleShape strawberryBuyButton(sf::Vector2f(130.f, 45.f));
+    strawberryBuyButton.setFillColor(sf::Color(120, 165, 95));
+    strawberryBuyButton.setPosition({560.f, 325.f});
+
+    sf::Text strawberryBuyText(font);
+    strawberryBuyText.setCharacterSize(18);
+    strawberryBuyText.setFillColor(sf::Color::White);
+    strawberryBuyText.setString("BUY");
+    strawberryBuyText.setPosition({595.f, 335.f});
 
     sf::Text buyButtonText(font);
-    buyButtonText.setCharacterSize(22);
+    buyButtonText.setCharacterSize(18);
     buyButtonText.setFillColor(sf::Color::White);
-    buyButtonText.setString("BUY SEED");
-    buyButtonText.setPosition({450.f, 378.f});
+    buyButtonText.setString("BUY");
+    buyButtonText.setPosition({595.f, 275.f});
+
+    sf::Text strawberrySeedText(font);
+    strawberrySeedText.setCharacterSize(22);
+    strawberrySeedText.setFillColor(sf::Color(190, 80, 90));
+    strawberrySeedText.setString("Strawberries: 0");
+    strawberrySeedText.setPosition({480.f, 415.f});
 
 const int rows = 3;
 const int columns = 5;
@@ -94,7 +115,7 @@ for (int row = 0; row < rows; row++)
         float x = 200.f + column * (plotSize + spacing);
         float y = 150.f + row * (plotSize + spacing);
 
-        plots.emplace_back(x, y);
+plots.emplace_back(x, y, CropType::Carrot);
     }
 }
 
@@ -128,23 +149,28 @@ if (mousePressed->button == sf::Mouse::Button::Left)
             {
                 if (plot.harvest())
                 {
-                    coins += 20;
-
+                    coins += plot.getSellPrice();
                     moneyText.setString(
                         "Coins: " + std::to_string(coins)
                     );
                 }
             }
 
-            // Plant a new seed
-            else if (seeds > 0)
+            else
             {
-                plot.plant();
-
-                seeds--;
-
+                if (selectedCrop == CropType::Carrot && carrotSeeds > 0)
+                {
+                    plot.plant(CropType::Carrot);
+                    carrotSeeds--;
+                }
+                else if (selectedCrop == CropType::Strawberry && strawberrySeeds > 0)
+                {
+                    plot.plant(CropType::Strawberry);
+                    strawberrySeeds--;
+                }
                 seedText.setString(
-                    "Seeds: " + std::to_string(seeds)
+                    "C: " + std::to_string(carrotSeeds) +
+                    "   S: " + std::to_string(strawberrySeeds)
                 );
             }
         }
@@ -172,14 +198,14 @@ if (shopOpen &&
         if (coins >= 10)
         {
             coins -= 10;
-            seeds++;
+            carrotSeeds++;
 
             moneyText.setString(
                 "Coins: " + std::to_string(coins)
             );
 
             seedText.setString(
-                "Seeds: " + std::to_string(seeds)
+                "Seeds: " + std::to_string(carrotSeeds)
             );
         }
     }
@@ -201,14 +227,15 @@ if (shopOpen &&
         if (coins >= 10)
         {
             coins -= 10;
-            seeds++;
+            carrotSeeds++;
 
             moneyText.setString(
                 "Coins: " + std::to_string(coins)
             );
 
             seedText.setString(
-                "Seeds: " + std::to_string(seeds)
+                "Carrots: " + std::to_string(carrotSeeds) +
+                "   Strawberries: " + std::to_string(strawberrySeeds)
             );
         }
     }
@@ -268,6 +295,8 @@ if (shopOpen &&
     window.draw(shopInfo);
     window.draw(buyButton);
     window.draw(buyButtonText);
+    window.draw(strawberryBuyButton);
+    window.draw(strawberryBuyText);
     window.draw(shopClose);
 }
 
